@@ -1,8 +1,8 @@
-        require_relative '../config/environment'
+require_relative '../config/environment'
         require "tty-prompt"
 
         # system("clear")
-        @curr_guest = nil
+        @current_guest = nil
 
         puts "Welcome to Deepa and Komal's Wedding"
         puts "**********************************"
@@ -62,7 +62,7 @@
                     input = gets.chomp
                     g = Guest.find_or_create_by(name: input)
                     g.update(RSVP: true)
-                    @curr_guest = g
+                    @current_guest = g
                 end
             end 
 
@@ -83,12 +83,12 @@
                 user_input = (gets.chomp).to_i
                 menu_id = menus[user_input-1].id
                 selected_menu = Menu.find(menu_id)
-                Guest_Menu.find_or_create_by(menu_id: selected_menu.id, guest_id: @curr_guest.id)
+                Guest_Menu.find_or_create_by(menu_id: selected_menu.id, guest_id: @current_guest.id)
             end 
             
             def get_guest_menu_selection
                 guest_menus = Guest_Menu.all.select do |guest_menu|
-                    guest_menu.guest_id == @curr_guest.id
+                    guest_menu.guest_id == @current_guest.id
                 end
                 guest_menus  
             end
@@ -111,4 +111,3 @@
                 end
             end
         get_user_input
-

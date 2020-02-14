@@ -1,84 +1,114 @@
-require_relative '../config/environment'
-require "tty-prompt"
+        require_relative '../config/environment'
+        require "tty-prompt"
 
-# system("clear")
+        # system("clear")
+        @curr_guest = nil
 
-puts "Welcome to Deepa and Komal's Wedding"
-puts "**********************************"
-puts "  ******************************"
-puts "   ***************************"
-puts "     *********************** "
-
-
-def get_user_input
-  puts "What would you like to do?"
-  puts "1. RSVP to our Wedding"
-  puts "2. See our Menu option"
-  puts "3. Review your menu selection" 
-  puts "4. Can't make it? No worries. Please enter name to be removed from guest-list"
-  puts "5. Exit"
-
-  input = gets.chomp.to_i
-
-  case (input)
-  when 1
-    puts "Please enter your name: " 
-    my_guest
-
-  when 2
-    puts "Here are the options for lunch:
-    1 Vegetarian
-    2 Non-Vegetarian
-    3 7 Curry "
-  ##what code can I generate to display the three menu options
-    puts "Looks delicious? Pease select your option:"
-     guest_menu
-
-  when 3
-    puts "Review menu selection"
-    #output guest_menu variable
-    guest_menu
+        puts "Welcome to Deepa and Komal's Wedding"
+        puts "**********************************"
+        puts "  ******************************"
+        puts "   ***************************"
+        puts "     *********************** "
 
 
-  when 4
-    puts "Stuff happens, no worries. Enter your name"
-    g = my_guest
-    g.destroy
-    #binding.pry
+        def get_user_input
+        puts "What would you like to do?"
+        puts "1. RSVP to our Wedding"
+        puts "2. See our Menu option"
+        puts "3. Review your menu selection" 
+        puts "4. Can't make it? No worries. Please enter name to be removed from guest-list"
+        puts "5. Exit"
 
-  when 5
-    return
-  
-  end
-  get_user_input
-end
+        input = gets.chomp.to_i
+        case (input)
 
+        when 1
+            puts "Please enter your name: " 
+            my_guest
 
-def my_guest 
-    input = gets.chomp
-    g = Guest.find_or_create_by(name: input)
-    g.update(RSVP: true)
-    g
-end 
+        when 2
+            if is_current_guest_valid
+                display_menus
+            end
+        when 3
+             if is_current_guest_valid   
+                puts "Review menu selection"    
+                display_guest_menu_selection
+            end
 
-#SELECT  "menus".* FROM "menus" WHERE "menus"."item" = ? LIMIT ?
-    def guest_menu
-        input = gets.chomp
-        input = gets.chomp # to get another user input
-        m = Menu.all.select do |menu|   
-        g << menu
-        m.update(item: string)
-        m
-    end 
+        when 4
+             if is_current_guest_valid
+                puts "Stuff happens, no worries."
+                # Deletes guest menu selections
+                guest_menu = get_guest_menu_selection
+                guest_menu.each do |guest_menu|
+                    guest_menu.destroy
+                end
+                
+                # Deletes the current user
+                @current_guest.destroy
+                @current_guest = nil
+            end
 
-    def my_meal(my_guest, guest_menu)
-        #What the meal is(m)
-        #What is the guest (g)
-    end
+        when 5
+            return
+        
+        end
+        get_user_input
+        end
 
-    # def my_meal(my_guest, guest_menu)
-  
-    # end
-end
+            def my_guest 
+                if @current_guest == nil
+                    input = gets.chomp
+                    g = Guest.find_or_create_by(name: input)
+                    g.update(RSVP: true)
+                    @curr_guest = g
+                end
+            end 
 
-get_user_input
+        #SELECT  "menus".* FROM "menus" WHERE "menus"."item" = ? LIMIT ?
+            def display_menus
+                menus = []
+                i = 1
+                Menu.all.each do |menu|
+                    menus.push(menu)
+                    puts "#{i}. #{menu.item}"
+                    i += 1
+                end
+                puts "Looks delicious? Pease select your option:"
+                guest_menu(menus)
+            end
+
+            def guest_menu(menus)
+                user_input = (gets.chomp).to_i
+                menu_id = menus[user_input-1].id
+                selected_menu = Menu.find(menu_id)
+                Guest_Menu.find_or_create_by(menu_id: selected_menu.id, guest_id: @curr_guest.id)
+            end 
+            
+            def get_guest_menu_selection
+                guest_menus = Guest_Menu.all.select do |guest_menu|
+                    guest_menu.guest_id == @curr_guest.id
+                end
+                guest_menus  
+            end
+
+            def display_guest_menu_selection
+                guest_menus = get_guest_menu_selection
+                guest_menus.each do |guest_menu|
+                    puts "#{Menu.find(guest_menu.menu_id).item}"
+                end
+            end
+
+            def is_current_guest_valid
+                if @current_guest == nil
+                    puts "**********"
+                    puts " Please RSVP"
+                    puts "*************"
+                    return false
+                else
+                    return true
+                end
+            end
+        get_user_input
+
